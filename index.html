@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard — Semiotica dei media (Eugeni)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #fdf4e7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 { color: #5c2e00; font-size: 22px; font-weight: 900; text-align: center; margin-bottom: 4px; }
+  .subtitle { color: #c47a30; font-size: 13px; text-align: center; margin-bottom: 18px; }
+
+  .chapter-select {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; max-width: 760px; margin-bottom: 22px;
+  }
+  .ch-btn {
+    background: #fde4b8; color: #7a3a00;
+    border: none; border-radius: 24px; padding: 8px 16px;
+    font-size: 13px; font-family: 'Nunito', sans-serif;
+    font-weight: 800; cursor: pointer; transition: all 0.2s;
+  }
+  .ch-btn:hover { background: #f8cc88; }
+  .ch-btn.active { background: #d4720a; color: white; }
+
+  .progress-wrap {
+    width: 100%; max-width: 560px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .progress-bar { flex:1; height:8px; background:#fde4b8; border-radius:10px; overflow:hidden; }
+  .progress-fill { height:100%; background:#d4720a; border-radius:10px; transition:width 0.3s; }
+  .progress-text { color:#d4720a; font-size:14px; font-weight:800; white-space:nowrap; }
+
+  .chapter-title {
+    color:#d4720a; font-size:13px; font-weight:800;
+    text-align:center; margin-bottom:10px;
+    letter-spacing:1px; text-transform:uppercase;
+  }
+
+  .card-wrap {
+    width:100%; max-width:560px; height:300px;
+    perspective:1000px; cursor:pointer; margin-bottom:22px;
+  }
+  .card-inner {
+    width:100%; height:100%; position:relative;
+    transform-style:preserve-3d;
+    transition:transform 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+  .card-inner.flipped { transform:rotateY(180deg); }
+
+  .card-front, .card-back {
+    position:absolute; width:100%; height:100%;
+    border-radius:20px; backface-visibility:hidden;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:32px 38px; text-align:center;
+  }
+  .card-front {
+    background: #fffdf5;
+    border: 3px solid #f5c842;
+    box-shadow: 0 6px 24px rgba(120,60,0,0.10);
+  }
+  .card-back {
+    background: #fff8ee;
+    border: 3px solid #d4720a;
+    box-shadow: 0 6px 24px rgba(120,60,0,0.10);
+    transform: rotateY(180deg);
+  }
+
+  .card-label { font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px; }
+  .card-front .card-label { color:#b89000; opacity:0.7; }
+  .card-back  .card-label { color:#d4720a; }
+
+  .card-front .card-text { font-size:20px; font-weight:800; color:#3a1a00; line-height:1.45; }
+  .card-back  .card-text { font-size:17px; font-weight:600; color:#3a1a00; line-height:1.6; }
+
+  .card-hint { position:absolute; bottom:16px; font-size:12px; font-weight:700; opacity:0.35; color:#3a1a00; }
+
+  .controls { display:flex; gap:12px; margin-bottom:28px; }
+  .btn {
+    padding:13px 30px; border:none; border-radius:14px;
+    font-family:'Nunito',sans-serif; font-size:16px; font-weight:800;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .btn-prev { background:#fde4b8; color:#7a3a00; }
+  .btn-prev:hover { background:#f8cc88; }
+  .btn-next { background:#d4720a; color:white; }
+  .btn-next:hover { background:#b85e06; }
+  .btn-shuffle { background:#fef3e0; color:#d4720a; font-size:13px; }
+  .btn-shuffle:hover { background:#fde4b8; }
+</style>
+</head>
+<body>
+
+<h1>🟠 Flashcard — Semiotica dei media</h1>
+<div class="subtitle">Ruggero Eugeni — Carocci 2010 · Capitolo 2: L'esperienza mediale · Clicca la carta per vedere la risposta</div>
+
+<div class="chapter-select" id="chapterSelect"></div>
+<div class="chapter-title" id="chapterTitle"></div>
+
+<div class="progress-wrap">
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-text" id="progressText"></div>
+</div>
+
+<div class="card-wrap" onclick="flipCard()">
+  <div class="card-inner" id="cardInner">
+    <div class="card-front">
+      <div class="card-label">❓ Domanda</div>
+      <div class="card-text" id="cardQuestion"></div>
+      <div class="card-hint">👆 Clicca per vedere la risposta</div>
+    </div>
+    <div class="card-back">
+      <div class="card-label">✅ Risposta</div>
+      <div class="card-text" id="cardAnswer"></div>
+      <div class="card-hint">👆 Clicca per girare</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-prev" onclick="prevCard()">← Indietro</button>
+  <button class="btn btn-shuffle" onclick="shuffleCards()">🔀 Mescola</button>
+  <button class="btn btn-next" onclick="nextCard()">Avanti →</button>
+</div>
+
+<script>
+const allCards = {
+
+"Concetti base": [
+  ["Cos'è il design esperienziale dei media?", "L'insieme delle scelte progettuali con cui i media guidano e modellano la tua esperienza. Quando guardi un concerto in TV, le emozioni che provi non sono casuali: qualcuno le ha progettate prima di te."],
+  ["In che senso l'esperienza mediale è seriale?", "Può essere ripetuta identica o quasi: puoi rivedere il film, riascoltare il podcast, rigiocare al videogioco. A differenza di un concerto dal vivo, che è irripetibile."],
+  ["In che senso l'esperienza mediale è collettiva?", "Persone distanti e diverse possono condividere la stessa esperienza mediale, purché abbiano accesso allo stesso medium e condividano certi saperi e gusti. Il tuo vicino ha visto lo stesso concerto in TV che hai visto tu."],
+  ["L'esperienza mediale è identica per tutti?", "No. Il progetto esperienziale è lo stesso, ma le singole esperienze vissute sono sempre diverse perché ogni persona porta con sé una storia, una cultura e un gusto diverso."],
+  ["Come mai l'esperienza mediale non è mai spontanea?", "Perché è sempre precostituita: qualcuno (registi, tecnici, produttori, algoritmi) l'ha progettata prima che tu la faccia. Entrare in un'esperienza mediale significa entrare in un progetto altrui."],
+],
+
+"Il modello a tre campi": [
+  ["Cos'è il mondo diretto?", "L'ambiente fisico reale in cui ti trovi mentre usi il medium. Esempio: il tuo salotto mentre guardi la TV, la sala del cinema, la stazione dove ascolti la radio."],
+  ["Cos'è il discorso?", "Le immagini, i suoni, i testi prodotti dal medium. È il tramite tra il tuo spazio fisico e il contenuto. Non è né il tuo salotto né lo stadio: è lo schermo, il suono, la pagina."],
+  ["Cos'è il mondo indiretto?", "Il contenuto del medium: lo stadio del concerto, il paese del film, il mondo del videogioco. Esiste nella tua esperienza ma non è fisicamente presente intorno a te."],
+  ["Fai un esempio concreto dei tre campi guardando un film al cinema.", "Mondo diretto = la sala, la poltrona, lo schermo fisico. Discorso = le immagini e i suoni del film. Mondo indiretto = la storia e i luoghi che vedi nel film."],
+  ["I tre campi sono separati o si influenzano?", "Si influenzano continuamente. Se il film è spaventoso, il tuo salotto ti sembrerà meno sicuro. Se il personaggio del film muore, piangi — anche se sai che è finzione. Il mondo indiretto cambia come percepisci il mondo diretto."],
+],
+
+"Criteri di distinzione — Criterio 1": [
+  ["Cos'è un dispositivo pervasivo? Fai un esempio.", "Un dispositivo che si sovrappone completamente all'ambiente e richiede la tua attenzione totale. Esempio classico: il cinema. Entri in uno spazio buio progettato interamente per creare quell'esperienza."],
+  ["Cos'è un dispositivo situato? Fai un esempio.", "Un dispositivo che si inserisce nell'ambiente senza occuparlo completamente. Esempio: la radio o l'iPod. Li ascolti mentre fai altro: lavare i piatti, cucinare, camminare."],
+  ["La TV è pervasiva o situata?", "Dipende dall'uso: un grande schermo home theatre è pervasivo. Un piccolo TV in cucina che tieni acceso mentre cucini è situato. La TV sta nel mezzo tra le due polarità."],
+  ["Fai un esempio di dispositivo più pervasivo del cinema.", "I parchi a tema (come Disneyland) o le installazioni di video-arte: ambienti multisensoriali progettati interamente per produrre una certa esperienza in chi li attraversa."],
+],
+
+"Criteri di distinzione — Criteri 2 e 3": [
+  ["Cos'è l'esperienza testuale?", "Il discorso ha confini precisi e andamento lineare: inizia, si svolge, finisce. Ha un senso compiuto. Esempi: un film, un romanzo, un podcast a episodio."],
+  ["Cos'è l'esperienza di flusso?", "Il discorso è continuo e tendenzialmente infinito: non c'è un inizio e una fine precisi. Entri e esci. Esempi: la televisione generalista, la radio."],
+  ["Cos'è l'esperienza ipertestuale?", "Il discorso è chiuso ma navigabile in più percorsi: puoi scegliere il tuo percorso all'interno di un insieme delimitato. Esempi: un DVD con i menu, un sito con struttura definita."],
+  ["Cos'è l'esperienza ambientale?", "Il discorso è aperto e senza confini, come un ambiente da esplorare. Non c'è inizio, fine né percorso obbligato. Esempio: la navigazione del web."],
+  ["Cos'è l'esperienza fattuale?", "Il mondo indiretto è in continuità con il tuo mondo reale: ti riguarda direttamente. Esempio: il telegiornale. Se annunciano un rincaro della benzina, domani il tuo pieno costerà di più."],
+  ["Cos'è l'esperienza finzionale?", "Il mondo indiretto è separato dalla tua realtà: le vicende ti appassionano ma non hanno effetti diretti sulla tua vita. Esempio: una serie TV, un film di finzione."],
+  ["Cos'è l'esperienza estetica?", "Il discorso stesso — il modo in cui il contenuto viene presentato — diventa il centro dell'attenzione. Esempi: un videoclip con immagini straordinarie, una sequenza di film curatissima."],
+  ["Cos'è l'esperienza partecipativa?", "Il fruitore non è solo spettatore ma diventa anche produttore. Esempi: partecipare a un forum, scrivere un blog, contribuire a Wikipedia, fare una diretta su Instagram."],
+],
+
+"Le 4 fasi storiche": [
+  ["Cos'è la prima fase dei media (1850-1918)?", "La fase dei media meccanici: stampa, fotografia, fonografo, cinema. La grande novità è la riproducibilità tecnica (termine di Benjamin): per la prima volta un'esperienza può essere riprodotta identica infinite volte. È uno shock culturale enorme."],
+  ["Cosa intende Eugeni con riproducibilità tecnica (riprendendo Benjamin)?", "La possibilità di riprodurre identica un'esperienza infinite volte grazie alle tecnologie. Prima ogni esperienza era unica e irripetibile. Con la fotografia, il fonografo e il cinema, l'esperienza diventa seriale, artificiale, commerciabile."],
+  ["Cos'è la seconda fase dei media (1919-1980)?", "La fase dei media elettronici: cinema di massa, radio e televisione. I media entrano nelle case e si inseriscono nella vita quotidiana in modo continuo. L'esperienza mediale diventa normale, parte del tessuto sociale."],
+  ["Cos'è la terza fase dei media (1980-2010)?", "La fase dei media digitali: internet, DVD, videogiochi, smartphone. Quattro novità: pervasività e differenziazione dei canali, alleggerimento dei dispositivi, multimedialità, interattività. L'esperienza mediale comincia a non essere più percepita come artificiale."],
+  ["Cos'è la naturalizzazione dell'esperienza mediale?", "Il fenomeno per cui i media non vengono più percepiti come artificiali. Non ci accorgiamo più di usarli — come non ci accorgiamo di respirare. È la caratteristica principale della fase digitale."],
+  ["Cos'è la quarta fase — quella algoritmica (2010 ad oggi)?", "La fase in cui gli algoritmi decidono cosa vedi, non tu. TikTok, Netflix, Instagram costruiscono un'esperienza personalizzata e automatica per ogni utente. Il design esperienziale non è più fatto da registi umani: è fatto dalla macchina che impara dai tuoi dati."],
+  ["Cos'è la filter bubble nella fase algoritmica?", "L'algoritmo tende a mostrarti solo contenuti simili a quelli che hai già visto. Crea una bolla in cui non incontri punti di vista diversi dal tuo. L'esperienza mediale diventa uno specchio amplificato di ciò che già pensi."],
+  ["Cos'è diverso nell'esperienza mediale algoritmica rispetto a quella televisiva?", "Con la TV generalista tutti vedevano le stesse cose: era un'esperienza collettiva condivisa. Con gli algoritmi ogni utente vive un'esperienza diversa dagli altri. Non esiste più un'esperienza mediale comune a tutti."],
+],
+
+};
+
+const chapters = Object.keys(allCards);
+let currentChapter = 0, currentDeck = [], currentIndex = 0, isFlipped = false;
+
+function buildChapterButtons() {
+  const wrap = document.getElementById('chapterSelect');
+  chapters.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ch-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = ch;
+    btn.onclick = () => selectChapter(i);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectChapter(i) {
+  currentChapter = i;
+  document.querySelectorAll('.ch-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+  currentDeck = [...allCards[chapters[i]]];
+  currentIndex = 0; isFlipped = false; showCard();
+}
+
+function showCard() {
+  const card = currentDeck[currentIndex];
+  document.getElementById('cardQuestion').textContent = card[0];
+  document.getElementById('cardAnswer').textContent = card[1];
+  document.getElementById('chapterTitle').textContent = chapters[currentChapter];
+  const pct = Math.round(((currentIndex + 1) / currentDeck.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = (currentIndex + 1) + ' / ' + currentDeck.length;
+  isFlipped = false;
+  document.getElementById('cardInner').classList.remove('flipped');
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('cardInner').classList.toggle('flipped', isFlipped);
+}
+function nextCard() {
+  currentIndex = (currentIndex < currentDeck.length - 1) ? currentIndex + 1 : 0;
+  showCard();
+}
+function prevCard() {
+  currentIndex = (currentIndex > 0) ? currentIndex - 1 : currentDeck.length - 1;
+  showCard();
+}
+function shuffleCards() {
+  for (let i = currentDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [currentDeck[i], currentDeck[j]] = [currentDeck[j], currentDeck[i]];
+  }
+  currentIndex = 0; showCard();
+}
+
+buildChapterButtons();
+selectChapter(0);
+</script>
+</body>
+</html>
